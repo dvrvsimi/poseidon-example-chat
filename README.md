@@ -1,5 +1,5 @@
 # poseidon-example-chat
-An example project build with Poseidon
+An example project built with Poseidon
 
 
 
