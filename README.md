@@ -1,7 +1,7 @@
 # Building a Chat Program with Poseidon
 
 ## Overview
-In this tutorial, we'll build a chat program where users can post, edit, and delete messages. Each message will have a title, content, author, and timestamp. This tutorial is designed for developers who want to learn Solana development using TypeScript through Poseidon.
+In this tutorial, we'll build a chat program where users can post, edit, and delete messages. Each message will have a title, content, author, and timestamp.
 
 ## Prerequisites
 Make sure you have completed the environment setup from the Poseidon main tutorial. You'll need:
