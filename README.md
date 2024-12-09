@@ -1,7 +1,7 @@
-# Building a Message Board Program with Poseidon
+# Building a Chat Program with Poseidon
 
 ## Overview
-In this tutorial, we'll build a message board program where users can post, edit, and delete messages. Each message will have a title, content, author, and timestamp. This tutorial is designed for developers who want to learn Solana development using TypeScript through Poseidon.
+In this tutorial, we'll build a chat program where users can post, edit, and delete messages. Each message will have a title, content, author, and timestamp. This tutorial is designed for developers who want to learn Solana development using TypeScript through Poseidon.
 
 ## Prerequisites
 Make sure you have completed the environment setup from the Poseidon main tutorial. You'll need:
@@ -12,8 +12,8 @@ Make sure you have completed the environment setup from the Poseidon main tutori
 - Poseidon binary
 
 ## Program Structure
-Our message board program will have the following instructions:
-1. `initialize` - Create a new message board
+Our chat program will have the following instructions:
+1. `initialize` - Create a new chat
 2. `postMessage` - Post a new message
 3. `editMessage` - Edit an existing message (only by the author)
 4. `deleteMessage` - Delete a message (only by the author)
@@ -22,13 +22,12 @@ Our message board program will have the following instructions:
 
 ### 1. Create Project Scaffold
 ```bash
-mkdir message-board
-cd message-board
-poseidon init message-board
+poseidon init chat
+cd chat
 ```
 
 ### 2. Define Program Structure
-Create a new file `ts-programs/messageBoardProgram.ts`:
+We would create a structure that we will improve as we proceed. Navigate to file `ts-programs/src/chat.ts` and paste the code below:
 
 ```typescript
 import { 
@@ -41,10 +40,12 @@ import {
   string 
 } from "@solanaturbine/poseidon";
 
-export default class MessageBoardProgram {
-  static PROGRAM_ID = new Pubkey("11111111111111111111111111111111");
+export default class ChatProgram {
+  static PROGRAM_ID = new Pubkey("11111111111111111111111111111111"); // system program id
 
-  initialize(): Result {}
+
+  // these will be transpiled as program instructions
+  initialize(): Result {} 
   postMessage(): Result {}
   editMessage(): Result {}
   deleteMessage(): Result {}
@@ -68,12 +69,12 @@ export interface BoardState extends Account {
 ```
 
 ### 3. Implement Instructions
-
+In the individual instructions, implement the instruction logic
 #### Initialize Board
 ```typescript
 initialize(
   authority: Signer,
-  boardState: BoardState
+  boardState: BoardState // interface defined in structure above
 ): Result {
   // Initialize board state PDA
   boardState.derive(["board"])
@@ -91,9 +92,9 @@ initialize(
 postMessage(
   author: Signer,
   message: Message,
-  boardState: BoardState,
-  title: string,
-  content: string
+  boardState: BoardState, 
+  title: Str<64>, // string type in poseidon
+  content: Str<1024>
 ): Result {
   // Derive board state PDA
   boardState.derive(["board"]);
@@ -123,11 +124,11 @@ editMessage(
   author: Signer,
   message: Message,
   boardState: BoardState,
-  newTitle: string,
-  newContent: string
+  newTitle: Str<64>,
+  newContent: Str<1024>
 ): Result {
   // Verify author
-  if (!message.author.equals(author.key)) {
+  if (message.author != author.key) { // using trad != for now
     throw new Error("Only the author can edit this message");
   }
   
@@ -144,29 +145,37 @@ deleteMessage(
   message: Message,
   boardState: BoardState
 ): Result {
+    boardState.derive(["board"]);
+        
+    message.derive([
+        "message",
+        message.messageIndex.toBytes(),
+        author.key
+    ]);
+
   // Verify author
-  if (!message.author.equals(author.key)) {
-    throw new Error("Only the author can delete this message");
-  }
+    if (message.author != author.key) {
+        throw new Error("Only the author can delete this message");
+    }
   
   // Close the message account and return rent to author
-  message.close(author);
+    message.close(author);
 }
 ```
 
-### 4. Testing
-Create tests in `tests/messageBoard.ts`:
+### 4. Writing a test
+Go to `tests/chat.ts`:
 
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { MessageBoardProgram } from "../target/types/message_board_program";
+import { Chat } from "../target/types/chat";
 import { assert } from "chai";
 
-describe("message board program", () => {
+describe("chat program", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  const program = anchor.workspace.MessageBoardProgram as Program<MessageBoardProgram>;
+  const program = anchor.workspace.Chat as Program<ChatProgram>;
 
   it("Initialize board", async () => {
     // Test initialization
@@ -203,36 +212,15 @@ After a successful build, you should see an output similar to the one below
 
 ## Key Concepts Covered
 
-1. **Program Derived Addresses (PDAs)**
-   - Board state PDA for storing global state
-   - Message PDAs for individual messages
-   - Using message count as a unique seed
+1. Program Derived Addresses (PDAs)
+2. Account Management
+3. State Management
+4. Access Control
 
-2. **Account Management**
-   - Creating and closing accounts
-   - Account authorization checks
-   - Rent handling
-
-3. **State Management**
-   - Storing and updating message content
-   - Managing message count
-   - Handling timestamps
-
-4. **Access Control**
-   - Author verification for edits and deletes
-   - Board authority management
-
-## Next Steps
-
-After completing this tutorial, you can extend the program with additional features:
-- Add message categories or tags
-- Implement message reactions/likes
-- Add board moderators
-- Create message threading/replies
-- Add pagination for message retrieval
-
-## Reference
+## References
 - [Poseidon Documentation](https://github.com/Turbin3/poseidon)
+- [Vote tutorial with Poseidon](https://github.com/dvrvsimi/poseidon/blob/master/docs/src/tutorial.md)
+
 - [Solana Account Model](https://solana.com/docs/core/accounts)
 - [Program Derived Addresses](https://solana.com/docs/core/pda)
 

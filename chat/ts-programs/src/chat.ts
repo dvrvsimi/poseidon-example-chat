@@ -62,10 +62,12 @@ export default class ChatProgram {
             author.key
         ]);
 
+        // verify author
         if (message.author != author.key) {
             throw new Error("Only the author can edit this message");
         }
         
+        // update message
         message.title = newTitle;
         message.content = newContent;
     }
