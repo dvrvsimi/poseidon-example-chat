@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-declare_id!("11111111111111111111111111111111");
+declare_id!("HNHmzBRStLNyEvFB7ZDrTeh5x5wmv8Y94hXDK5r3rB2J");
 #[program]
 pub mod chat_program {
     use super::*;
@@ -17,7 +17,7 @@ pub mod chat_program {
         ctx.accounts.message.author = ctx.accounts.author.key();
         ctx.accounts.message.title = title;
         ctx.accounts.message.content = content;
-        ctx.accounts.message.message_index = ctx.accounts.board_state.key();
+        ctx.accounts.message.message_index = ctx.accounts.board_state.message_count;
         ctx.accounts.message.bump = ctx.bumps.message;
         ctx
             .accounts
@@ -82,15 +82,16 @@ pub struct EditMessageContext<'info> {
 }
 #[derive(Accounts)]
 pub struct DeleteMessageContext<'info> {
-    #[account(mut)]
-    pub author: Signer<'info>,
     #[account(seeds = [b"board"], bump)]
     pub board_state: Account<'info, BoardState>,
+    #[account(mut)]
+    pub author: Signer<'info>,
     #[account(
         mut,
         seeds = [b"message",
         message.message_index.to_le_bytes().as_ref(),
         author.key().as_ref()],
+        has_one = author,
         bump,
         close = author,
     )]

@@ -9,7 +9,7 @@ import {
 } from "@solanaturbine/poseidon";
 
 export default class ChatProgram {
-    static PROGRAM_ID = new Pubkey("11111111111111111111111111111111");
+    static PROGRAM_ID = new Pubkey("HNHmzBRStLNyEvFB7ZDrTeh5x5wmv8Y94hXDK5r3rB2J");
 
     initialize(
         authority: Signer,
@@ -60,12 +60,13 @@ export default class ChatProgram {
             "message",
             message.messageIndex.toBytes(),
             author.key
-        ]);
+        ])
+        .has([ author ]); // This enforces author check at the account constraint level
 
-        // verify author
-        if (message.author != author.key) {
-            throw new Error("Only the author can edit this message");
-        }
+        // // verify author
+        // if (message.author != author.key) {
+        //     throw new Error("Only the author can edit this message");
+        // }
         
         // update message
         message.title = newTitle;
@@ -83,13 +84,15 @@ export default class ChatProgram {
             "message",
             message.messageIndex.toBytes(),
             author.key
-        ]);
+        ])
+        .has([ author ])
+        .close(author);
 
-        if (message.author != author.key) {
-            throw new Error("Only the author can delete this message");
-        }
+        // if (message.author != author.key) {
+        //     throw new Error("Only the author can delete this message");
+        // }
         
-        message.close(author);
+        // message.close(author);
     }
 }
 
